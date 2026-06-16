@@ -1,0 +1,14 @@
+# Compiled binaries
+*.exe
+
+# Resource compile output
+*.res
+
+# Intermediate object files
+*.o
+*.obj
+
+# Editor/IDE files
+.vs/
+.idea/
+.vscode/
