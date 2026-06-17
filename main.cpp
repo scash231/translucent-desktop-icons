@@ -129,21 +129,25 @@ bool SetDesktopIconOpacity(int opacity, const std::string& targetLayer) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cout << "===========================================\n";
-        std::cout << "   Desktop Icon Opacity Manipulator Tool   \n";
-        std::cout << "===========================================\n";
-        std::cout << "Running in Interactive Mode.\n";
-        std::cout << "Usage with CLI: desktop_icons.exe <opacity_0-255> [listview|defview|workerw]\n\n";
-
-        std::string targetLayer = "listview";
-        int opacity = -1;
+        std::string statusMessage = "Ready.";
+        int activeLayerIndex = 1; // 1 = listview, 2 = defview, 3 = workerw
 
         while (true) {
-            std::cout << "\nCurrent target layer: [" << targetLayer << "]\n";
+            system("cls");
+            std::cout << "===========================================\n";
+            std::cout << "   Desktop Icon Opacity Manipulator Tool   \n";
+            std::cout << "===========================================\n";
+            std::cout << "Status: " << statusMessage << "\n\n";
+
+            std::cout << "Active Target Layer:\n";
+            std::cout << "  [1] SysListView32 (Desktop Icons) " << (activeLayerIndex == 1 ? "<-- ACTIVE" : "") << "\n";
+            std::cout << "  [2] SHELLDLL_DefView (Parent View) " << (activeLayerIndex == 2 ? "<-- ACTIVE" : "") << "\n";
+            std::cout << "  [3] WorkerW / Progman (Background) " << (activeLayerIndex == 3 ? "<-- ACTIVE" : "") << "\n\n";
+
             std::cout << "Commands:\n";
-            std::cout << "  0 - 255  : Change desktop opacity to this value\n";
-            std::cout << "  t        : Change target layer (listview / defview / workerw)\n";
-            std::cout << "  q        : Quit application\n";
+            std::cout << "  0 - 255  : Change opacity of active layer\n";
+            std::cout << "  1, 2, 3  : Switch active target layer\n";
+            std::cout << "  q        : Quit application\n\n";
             std::cout << "Enter command: ";
 
             std::string input;
@@ -163,28 +167,40 @@ int main(int argc, char* argv[]) {
                 break;
             }
 
-            if (input == "t" || input == "T") {
-                std::cout << "Enter target layer ('listview', 'defview', 'workerw'): ";
-                std::string layerInput;
-                std::getline(std::cin, layerInput);
-                std::transform(layerInput.begin(), layerInput.end(), layerInput.begin(), ::tolower);
-                if (layerInput == "listview" || layerInput == "defview" || layerInput == "workerw") {
-                    targetLayer = layerInput;
-                } else {
-                    std::cout << "Invalid layer name. Keeping current target.\n";
-                }
+            if (input == "1") {
+                activeLayerIndex = 1;
+                statusMessage = "Switched target layer to SysListView32 (Desktop Icons).";
+                continue;
+            }
+            if (input == "2") {
+                activeLayerIndex = 2;
+                statusMessage = "Switched target layer to SHELLDLL_DefView (Parent View).";
+                continue;
+            }
+            if (input == "3") {
+                activeLayerIndex = 3;
+                statusMessage = "Switched target layer to WorkerW / Progman (Background).";
                 continue;
             }
 
             try {
-                opacity = std::stoi(input);
+                int opacity = std::stoi(input);
                 if (opacity >= 0 && opacity <= 255) {
-                    SetDesktopIconOpacity(opacity, targetLayer);
+                    std::string targetLayer = (activeLayerIndex == 1) ? "listview" : 
+                                              (activeLayerIndex == 2) ? "defview" : "workerw";
+                    std::string layerName = (activeLayerIndex == 1) ? "SysListView32" : 
+                                            (activeLayerIndex == 2) ? "SHELLDLL_DefView" : "WorkerW/Progman";
+                    
+                    if (SetDesktopIconOpacity(opacity, targetLayer)) {
+                        statusMessage = "Success: Set " + layerName + " opacity to " + std::to_string(opacity) + " (" + std::to_string(opacity * 100 / 255) + "%).";
+                    } else {
+                        statusMessage = "Error: Failed to set opacity on " + layerName + ".";
+                    }
                 } else {
-                    std::cout << "Error: Opacity must be between 0 and 255.\n";
+                    statusMessage = "Error: Opacity must be between 0 and 255.";
                 }
             } catch (...) {
-                std::cout << "Error: Invalid command. Use a number (0-255), 't' to target, or 'q' to quit.\n";
+                statusMessage = "Error: Invalid command. Use 0-255, 1-3, or 'q'.";
             }
         }
         return 0;
