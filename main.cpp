@@ -98,6 +98,8 @@ bool SetDesktopIconOpacity(int opacity, const std::string& targetLayer) {
         } else {
             std::cout << "Layer is already fully opaque." << std::endl;
         }
+        // Force a desktop background composition refresh to clear any ghost trails/artifacts.
+        SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
     } else {
         // Enable layering if not already enabled.
         if (!(style & WS_EX_LAYERED)) {
@@ -147,6 +149,8 @@ int main(int argc, char* argv[]) {
             std::cout << "Commands:\n";
             std::cout << "  0 - 255  : Change opacity of active layer\n";
             std::cout << "  1, 2, 3  : Switch active target layer\n";
+            std::cout << "  r        : Refresh desktop (clears rendering artifacts/ghost trails)\n";
+            std::cout << "  e        : Restart Windows Explorer (recovers default desktop)\n";
             std::cout << "  q        : Quit application\n\n";
             std::cout << "Enter command: ";
 
@@ -165,6 +169,22 @@ int main(int argc, char* argv[]) {
 
             if (input == "q" || input == "Q" || input == "exit") {
                 break;
+            }
+
+            if (input == "r" || input == "R") {
+                statusMessage = "Refreshing desktop background...";
+                SystemParametersInfoA(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
+                statusMessage = "Desktop background refreshed successfully (artifacts cleared).";
+                continue;
+            }
+
+            if (input == "e" || input == "E") {
+                statusMessage = "Restarting Windows Explorer...";
+                system("taskkill /f /im explorer.exe >nul 2>nul");
+                Sleep(500);
+                system("start explorer.exe >nul 2>nul");
+                statusMessage = "Windows Explorer restarted successfully.";
+                continue;
             }
 
             if (input == "1") {
